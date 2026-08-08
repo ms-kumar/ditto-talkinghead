@@ -220,21 +220,20 @@ python inference.py \
 
 Apple Silicon Macs are supported through the PyTorch checkpoint path. CUDA and TensorRT are NVIDIA-only and are not available on macOS, so use `checkpoints/ditto_pytorch` with `--device auto` or `--device mps`.
 
-Install dependencies with Python 3.10:
+Install dependencies with `uv` and Python 3.10. The Apple Silicon/PyTorch runtime dependencies are defined in `pyproject.toml` and locked in `uv.lock`.
 
 ```bash
-brew install ffmpeg git-lfs
+brew install uv ffmpeg git-lfs
 git lfs install
 
-python -m pip install -U pip
-pip install torch torchvision torchaudio
-pip install onnxruntime mediapipe librosa tqdm filetype imageio opencv-python-headless scikit-image cython imageio-ffmpeg colored numpy==2.0.1
+uv python install 3.10
+uv sync
 ```
 
 Run inference:
 
 ```shell
-PYTORCH_ENABLE_MPS_FALLBACK=1 python inference.py \
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run python inference.py \
     --data_root "./checkpoints/ditto_pytorch" \
     --cfg_pkl "./checkpoints/ditto_cfg/v0.4_hubert_cfg_pytorch.pkl" \
     --audio_path "./example/audio.wav" \
