@@ -212,8 +212,38 @@ python inference.py \
     --cfg_pkl "./checkpoints/ditto_cfg/v0.4_hubert_cfg_pytorch.pkl" \
     --audio_path "./example/audio.wav" \
     --source_path "./example/image.png" \
-    --output_path "./tmp/result.mp4" 
+    --output_path "./tmp/result.mp4" \
+    --device auto
 ```
+
+### Apple Silicon Mac
+
+Apple Silicon Macs are supported through the PyTorch checkpoint path. CUDA and TensorRT are NVIDIA-only and are not available on macOS, so use `checkpoints/ditto_pytorch` with `--device auto` or `--device mps`.
+
+Install dependencies with Python 3.10:
+
+```bash
+brew install ffmpeg git-lfs
+git lfs install
+
+python -m pip install -U pip
+pip install torch torchvision torchaudio
+pip install onnxruntime mediapipe librosa tqdm filetype imageio opencv-python-headless scikit-image cython imageio-ffmpeg colored numpy==2.0.1
+```
+
+Run inference:
+
+```shell
+PYTORCH_ENABLE_MPS_FALLBACK=1 python inference.py \
+    --data_root "./checkpoints/ditto_pytorch" \
+    --cfg_pkl "./checkpoints/ditto_cfg/v0.4_hubert_cfg_pytorch.pkl" \
+    --audio_path "./example/audio.wav" \
+    --source_path "./example/image.png" \
+    --output_path "./tmp/result.mp4" \
+    --device auto
+```
+
+The final video with audio is written to `tmp/result.mp4`. The temporary file `tmp/result.mp4.tmp.mp4` contains only video frames and is silent until the final `ffmpeg` mux step completes. Apple Silicon inference is expected to be slower than the CUDA/TensorRT path.
 
 
 ## 📧 Acknowledgement
