@@ -15,8 +15,20 @@ def seed_everything(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+
+
+def resolve_device(device):
+    if device != "auto":
+        return device
+    if torch.cuda.is_available():
+        return "cuda"
+    mps = getattr(torch.backends, "mps", None)
+    if mps is not None and mps.is_available():
+        return "mps"
+    return "cpu"
 
 
 def load_pkl(pkl):
@@ -68,6 +80,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--data_root", type=str, default="./checkpoints/ditto_trt_Ampere_Plus", help="path to trt data_root")
     parser.add_argument("--cfg_pkl", type=str, default="./checkpoints/ditto_cfg/v0.4_hubert_cfg_trt.pkl", help="path to cfg_pkl")
+    parser.add_argument("--device", type=str, default="auto", choices=["auto", "cuda", "mps", "cpu"], help="device for PyTorch/ONNX models")
 
     parser.add_argument("--audio_path", type=str, help="path to input wav")
     parser.add_argument("--source_path", type=str, help="path to input image")
@@ -77,7 +90,9 @@ if __name__ == "__main__":
     # init sdk
     data_root = args.data_root   # model dir
     cfg_pkl = args.cfg_pkl     # cfg pkl
-    SDK = StreamSDK(cfg_pkl, data_root)
+    device = resolve_device(args.device)
+    print(f"Using device: {device}")
+    SDK = StreamSDK(cfg_pkl, data_root, device=device)
 
     # input args
     audio_path = args.audio_path    # .wav
