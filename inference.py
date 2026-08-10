@@ -36,6 +36,22 @@ def load_pkl(pkl):
         return pickle.load(f)
 
 
+def build_setup_overrides(args):
+    setup_kwargs = {}
+    if args.fast_mac:
+        setup_kwargs.update({
+            "sampling_timesteps": 10,
+            "max_size": 512,
+        })
+    if args.sampling_timesteps is not None:
+        setup_kwargs["sampling_timesteps"] = args.sampling_timesteps
+    if args.max_size is not None:
+        setup_kwargs["max_size"] = args.max_size
+    if args.online_mode:
+        setup_kwargs["online_mode"] = True
+    return setup_kwargs
+
+
 def run(SDK: StreamSDK, audio_path: str, source_path: str, output_path: str, more_kwargs: str | dict = {}):
 
     if isinstance(more_kwargs, str):
@@ -81,6 +97,10 @@ if __name__ == "__main__":
     parser.add_argument("--data_root", type=str, default="./checkpoints/ditto_trt_Ampere_Plus", help="path to trt data_root")
     parser.add_argument("--cfg_pkl", type=str, default="./checkpoints/ditto_cfg/v0.4_hubert_cfg_trt.pkl", help="path to cfg_pkl")
     parser.add_argument("--device", type=str, default="auto", choices=["auto", "cuda", "mps", "cpu"], help="device for PyTorch/ONNX models")
+    parser.add_argument("--fast_mac", "--fast-mac", action="store_true", help="faster Apple Silicon preview: sampling_timesteps=10 and max_size=512")
+    parser.add_argument("--sampling_timesteps", "--sampling-timesteps", type=int, default=None, help="override diffusion sampling steps")
+    parser.add_argument("--max_size", "--max-size", type=int, default=None, help="override source max size before processing")
+    parser.add_argument("--online_mode", "--online-mode", action="store_true", help="enable chunked online mode when supported by the config")
 
     parser.add_argument("--audio_path", type=str, help="path to input wav")
     parser.add_argument("--source_path", type=str, help="path to input image")
@@ -93,6 +113,9 @@ if __name__ == "__main__":
     device = resolve_device(args.device)
     print(f"Using device: {device}")
     SDK = StreamSDK(cfg_pkl, data_root, device=device)
+    setup_kwargs = build_setup_overrides(args)
+    if setup_kwargs:
+        print(f"Setup overrides: {setup_kwargs}")
 
     # input args
     audio_path = args.audio_path    # .wav
@@ -101,4 +124,4 @@ if __name__ == "__main__":
 
     # run
     # seed_everything(1024)
-    run(SDK, audio_path, source_path, output_path)
+    run(SDK, audio_path, source_path, output_path, more_kwargs={"setup_kwargs": setup_kwargs})

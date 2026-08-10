@@ -242,6 +242,21 @@ PYTORCH_ENABLE_MPS_FALLBACK=1 uv run python inference.py \
     --device auto
 ```
 
+For a faster low-quality Apple Silicon preview, reduce diffusion steps and source size:
+
+```shell
+PYTORCH_ENABLE_MPS_FALLBACK=1 uv run python inference.py \
+    --data_root "./checkpoints/ditto_pytorch" \
+    --cfg_pkl "./checkpoints/ditto_cfg/v0.4_hubert_cfg_pytorch.pkl" \
+    --audio_path "./example/audio.wav" \
+    --source_path "./example/image.png" \
+    --output_path "./tmp/result_fast_mac.mp4" \
+    --device auto \
+    --fast_mac
+```
+
+You can tune the tradeoff manually with `--sampling_timesteps`, `--max_size`, and `--online_mode`.
+
 The final video with audio is written to `tmp/result.mp4`. The temporary file `tmp/result.mp4.tmp.mp4` contains only video frames and is silent until the final `ffmpeg` mux step completes. Apple Silicon inference is expected to be slower than the CUDA/TensorRT path.
 
 
